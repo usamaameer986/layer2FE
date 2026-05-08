@@ -1,0 +1,1436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Zoho CRM Live Bridge — CPL SIP</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:#F4F5F7;color:#1A2A3A;}
+
+/* Top Nav */
+#topnav{
+  position:fixed;top:0;left:0;right:0;height:52px;
+  background:#1A2A3A;
+  display:flex;align-items:center;gap:0;
+  z-index:100;
+  box-shadow:0 2px 8px rgba(0,0,0,0.25);
+}
+.brand{
+  display:flex;align-items:center;gap:10px;
+  padding:0 20px;
+  border-right:1px solid rgba(255,255,255,0.1);
+  height:100%;min-width:220px;
+}
+.brand-logo{
+  width:30px;height:30px;background:#FF5C00;
+  border-radius:6px;display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:14px;color:#fff;
+}
+.brand-text{color:#fff;font-size:13px;font-weight:600;line-height:1.2;}
+.brand-sub{color:rgba(255,255,255,0.5);font-size:10px;font-weight:400;}
+
+.nav-links{display:flex;align-items:center;gap:0;height:100%;flex:1;padding:0 8px;}
+.nav-link{
+  display:flex;align-items:center;gap:7px;
+  padding:0 16px;height:100%;
+  color:rgba(255,255,255,0.65);font-size:13px;font-weight:500;
+  cursor:pointer;border-bottom:3px solid transparent;
+  transition:all 0.15s;user-select:none;
+}
+.nav-link:hover{color:#fff;background:rgba(255,255,255,0.05);}
+.nav-link.active{color:#FF5C00;border-bottom-color:#FF5C00;background:rgba(255,92,0,0.08);}
+.nav-link i{width:15px;height:15px;}
+
+.nav-right{display:flex;align-items:center;gap:12px;padding:0 16px;}
+.nav-badge{
+  background:#FF5C00;color:#fff;
+  font-size:10px;font-weight:700;
+  padding:2px 7px;border-radius:10px;
+}
+.nav-avatar{
+  width:30px;height:30px;border-radius:50%;
+  background:#FF5C00;display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:12px;font-weight:700;cursor:pointer;
+}
+
+/* Main content */
+#main{margin-top:52px;min-height:calc(100vh - 52px);}
+
+/* Views */
+.view{display:none;}
+.view.active{display:block;}
+
+/* Dashboard */
+.page-header{
+  background:#fff;border-bottom:1px solid #E5E7EB;
+  padding:16px 28px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.page-title{font-size:18px;font-weight:700;color:#1A2A3A;}
+.page-sub{font-size:12px;color:#6B7280;margin-top:2px;}
+
+.content-area{padding:24px 28px;}
+
+/* Stat Cards */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{
+  background:#fff;border-radius:10px;padding:18px 20px;
+  border:1px solid #E5E7EB;
+  position:relative;overflow:hidden;
+}
+.stat-card::before{
+  content:'';position:absolute;top:0;left:0;bottom:0;width:4px;
+  background:var(--accent,#FF5C00);
+}
+.stat-label{font-size:11px;color:#6B7280;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
+.stat-value{font-size:28px;font-weight:800;color:#1A2A3A;margin:6px 0 2px;}
+.stat-trend{font-size:11px;color:#10B981;font-weight:500;}
+.stat-trend.neg{color:#EF4444;}
+.stat-trend.warn{color:#F59E0B;}
+
+/* Charts row */
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:24px;}
+.chart-card{background:#fff;border-radius:10px;border:1px solid #E5E7EB;padding:20px;}
+.chart-title{font-size:13px;font-weight:700;color:#1A2A3A;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.chart-title span{font-weight:400;color:#6B7280;font-size:12px;}
+
+/* Alert banner */
+.alert-banner{
+  background:linear-gradient(135deg,#FEF2F2,#FFF5F5);
+  border:1px solid #FCA5A5;border-left:4px solid #EF4444;
+  border-radius:8px;padding:14px 18px;
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;
+}
+.alert-left{display:flex;align-items:center;gap:12px;}
+.alert-icon{
+  width:36px;height:36px;background:#EF4444;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;color:#fff;
+  animation:pulse 2s infinite;
+}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+.alert-title{font-size:13px;font-weight:700;color:#DC2626;}
+.alert-desc{font-size:12px;color:#6B7280;margin-top:2px;}
+.alert-badge{background:#DC2626;color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;}
+
+/* Pipeline table */
+.pipeline-table{background:#fff;border-radius:10px;border:1px solid #E5E7EB;overflow:hidden;}
+.table-header{padding:16px 20px;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;justify-content:space-between;}
+.table-title{font-size:13px;font-weight:700;color:#1A2A3A;}
+table{width:100%;border-collapse:collapse;}
+thead th{
+  background:#F9FAFB;padding:10px 16px;
+  text-align:left;font-size:11px;font-weight:600;
+  color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;
+  border-bottom:1px solid #E5E7EB;
+}
+tbody tr{border-bottom:1px solid #F3F4F6;transition:background 0.15s;cursor:pointer;}
+tbody tr:hover{background:#FFF8F5;}
+tbody td{padding:12px 16px;font-size:13px;color:#374151;}
+.badge{
+  display:inline-flex;align-items:center;
+  padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;
+}
+.badge-red{background:#FEE2E2;color:#DC2626;}
+.badge-yellow{background:#FEF3C7;color:#D97706;}
+.badge-green{background:#D1FAE5;color:#059669;}
+.badge-blue{background:#DBEAFE;color:#2563EB;}
+.badge-purple{background:#EDE9FE;color:#7C3AED;}
+.badge-gray{background:#F3F4F6;color:#6B7280;}
+.badge-orange{background:#FFEDD5;color:#EA580C;}
+
+/* ===== KANBAN VIEW ===== */
+.kanban-wrapper{padding:20px 28px;}
+.kanban-board{
+  display:flex;gap:14px;
+  overflow-x:auto;
+  padding-bottom:12px;
+}
+.kanban-col{
+  min-width:200px;max-width:200px;
+  background:#EEF0F3;border-radius:10px;
+  padding:12px;
+  flex-shrink:0;
+}
+.col-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:10px;
+}
+.col-title{font-size:11px;font-weight:700;color:#1A2A3A;text-transform:uppercase;letter-spacing:0.5px;}
+.col-count{
+  width:20px;height:20px;border-radius:50%;
+  background:#1A2A3A;color:#fff;
+  font-size:10px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+}
+.col-count.orange{background:#FF5C00;}
+
+.kanban-card{
+  background:#fff;border-radius:8px;padding:12px;
+  margin-bottom:8px;
+  border:1px solid #E5E7EB;
+  cursor:pointer;transition:all 0.15s;
+  position:relative;overflow:hidden;
+}
+.kanban-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.1);transform:translateY(-1px);}
+.kanban-card.alert{border-left:3px solid #EF4444;}
+.kanban-card.warn{border-left:3px solid #F59E0B;}
+.kanban-card.ok{border-left:3px solid #10B981;}
+
+.card-client{font-size:10px;font-weight:600;color:#FF5C00;text-transform:uppercase;margin-bottom:3px;}
+.card-product{font-size:12px;font-weight:600;color:#1A2A3A;line-height:1.3;margin-bottom:6px;}
+.card-meta{display:flex;align-items:center;justify-content:space-between;margin-top:6px;}
+.card-days{font-size:10px;color:#6B7280;}
+.card-days.red{color:#DC2626;font-weight:600;}
+.card-iter{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;background:#F3F4F6;color:#374151;}
+.card-iter.red{background:#FEE2E2;color:#DC2626;}
+.card-id{font-size:10px;color:#9CA3AF;margin-top:4px;}
+
+/* ===== INTAKE FORM VIEW ===== */
+.intake-wrapper{padding:28px;max-width:860px;}
+.form-card{background:#fff;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;}
+.form-header{
+  background:linear-gradient(135deg,#1A2A3A,#2D4059);
+  padding:22px 28px;
+  display:flex;align-items:center;gap:14px;
+}
+.form-icon{
+  width:44px;height:44px;background:#FF5C00;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;color:#fff;
+}
+.form-title{font-size:17px;font-weight:700;color:#fff;}
+.form-subtitle{font-size:12px;color:rgba(255,255,255,0.6);margin-top:2px;}
+
+.form-body{padding:28px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+.form-row.full{grid-template-columns:1fr;}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+label{font-size:12px;font-weight:600;color:#374151;}
+.form-control{
+  border:1px solid #D1D5DB;border-radius:8px;padding:10px 14px;
+  font-size:13px;color:#1A2A3A;font-family:'Inter',sans-serif;
+  outline:none;transition:border 0.15s;background:#fff;
+}
+.form-control:focus{border-color:#FF5C00;box-shadow:0 0 0 3px rgba(255,92,0,0.1);}
+select.form-control{cursor:pointer;}
+.required{color:#EF4444;margin-left:3px;}
+
+.form-divider{border:none;border-top:1px solid #E5E7EB;margin:24px 0;}
+
+.submit-btn{
+  background:#FF5C00;color:#fff;border:none;
+  padding:12px 32px;border-radius:8px;
+  font-size:14px;font-weight:700;font-family:'Inter',sans-serif;
+  cursor:pointer;transition:background 0.15s;
+  display:flex;align-items:center;gap:8px;
+}
+.submit-btn:hover{background:#E54F00;}
+
+/* SAP Sync Modal */
+.modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);
+  z-index:200;align-items:center;justify-content:center;
+}
+.modal-overlay.show{display:flex;}
+.sync-modal{
+  background:#fff;border-radius:14px;padding:36px;
+  width:420px;text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,0.2);
+}
+.sync-logo{
+  width:56px;height:56px;background:#1A2A3A;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:800;font-size:18px;
+  margin:0 auto 12px;
+}
+.sync-title{font-size:16px;font-weight:700;color:#1A2A3A;margin-bottom:4px;}
+.sync-sub{font-size:12px;color:#6B7280;margin-bottom:24px;}
+
+.sync-steps{text-align:left;display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
+.sync-step{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;border-radius:8px;
+  background:#F9FAFB;border:1px solid #E5E7EB;
+  transition:all 0.3s;
+}
+.sync-step.active{background:#FFF8F5;border-color:#FF5C00;}
+.sync-step.done{background:#F0FDF4;border-color:#10B981;}
+.step-icon{
+  width:28px;height:28px;border-radius:50%;
+  background:#E5E7EB;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all 0.3s;
+}
+.sync-step.active .step-icon{background:#FF5C00;}
+.sync-step.done .step-icon{background:#10B981;}
+.step-icon i{width:14px;height:14px;color:#9CA3AF;}
+.sync-step.active .step-icon i,.sync-step.done .step-icon i{color:#fff;}
+.step-text{flex:1;}
+.step-label{font-size:12px;font-weight:600;color:#374151;}
+.sync-step.active .step-label{color:#FF5C00;}
+.sync-step.done .step-label{color:#059669;}
+.step-desc{font-size:11px;color:#9CA3AF;margin-top:1px;}
+
+.spinner{
+  width:18px;height:18px;border:2px solid rgba(255,92,0,0.3);
+  border-top-color:#FF5C00;border-radius:50%;
+  animation:spin 0.7s linear infinite;margin-left:auto;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.success-box{
+  background:linear-gradient(135deg,#F0FDF4,#ECFDF5);
+  border:1px solid #6EE7B7;border-radius:10px;
+  padding:20px;display:none;
+}
+.success-id{
+  font-size:26px;font-weight:800;color:#1A2A3A;
+  font-family:monospace;letter-spacing:2px;
+  margin:8px 0;
+}
+.success-label{font-size:11px;color:#059669;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;}
+
+/* ===== SAP FEED VIEW ===== */
+.feed-wrapper{padding:24px 28px;}
+.feed-grid{display:grid;grid-template-columns:2fr 1fr;gap:20px;}
+.feed-stream{background:#fff;border-radius:10px;border:1px solid #E5E7EB;overflow:hidden;}
+.stream-header{padding:14px 18px;border-bottom:1px solid #E5E7EB;display:flex;align-items:center;justify-content:space-between;}
+.stream-title{font-size:13px;font-weight:700;color:#1A2A3A;}
+.stream-body{padding:4px 0;max-height:500px;overflow-y:auto;}
+.feed-event{
+  display:flex;gap:14px;padding:14px 18px;
+  border-bottom:1px solid #F3F4F6;transition:background 0.15s;
+}
+.feed-event:hover{background:#FFF8F5;}
+.event-dot{
+  width:8px;height:8px;border-radius:50%;
+  margin-top:5px;flex-shrink:0;
+}
+.event-dot.orange{background:#FF5C00;}
+.event-dot.green{background:#10B981;}
+.event-dot.blue{background:#3B82F6;}
+.event-dot.red{background:#EF4444;}
+.event-dot.purple{background:#8B5CF6;}
+.event-content{flex:1;}
+.event-title{font-size:12px;font-weight:600;color:#1A2A3A;}
+.event-meta{font-size:11px;color:#6B7280;margin-top:2px;}
+.event-time{font-size:10px;color:#9CA3AF;margin-top:4px;}
+.event-tag{
+  font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;
+  background:#FFEDD5;color:#EA580C;margin-left:6px;
+}
+
+.feed-side{display:flex;flex-direction:column;gap:16px;}
+.side-card{background:#fff;border-radius:10px;border:1px solid #E5E7EB;padding:18px;}
+.side-title{font-size:12px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;}
+.sync-status-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F3F4F6;}
+.sync-status-row:last-child{border-bottom:none;}
+.sync-status-label{font-size:12px;color:#374151;font-weight:500;}
+.sync-status-val{font-size:12px;font-weight:700;color:#1A2A3A;}
+.sync-status-val.green{color:#059669;}
+.sync-status-val.orange{color:#FF5C00;}
+
+.live-pill{
+  display:flex;align-items:center;gap:6px;
+  background:#D1FAE5;color:#059669;
+  font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;
+}
+.live-dot{width:7px;height:7px;background:#10B981;border-radius:50%;animation:pulse-dot 1.5s infinite;}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.3}}
+
+.orange-btn{
+  background:#FF5C00;color:#fff;border:none;
+  padding:8px 16px;border-radius:7px;
+  font-size:12px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;gap:6px;
+  transition:background 0.15s;
+}
+.orange-btn:hover{background:#E54F00;}
+
+/* Card expand */
+.card-expanded{
+  display:none;margin-top:10px;padding-top:10px;
+  border-top:1px dashed #E5E7EB;
+}
+.kanban-card.open .card-expanded{display:block;}
+.card-exp-row{display:flex;justify-content:space-between;margin-bottom:5px;}
+.card-exp-label{font-size:10px;color:#9CA3AF;}
+.card-exp-val{font-size:10px;font-weight:600;color:#374151;}
+
+.progress-bar{height:4px;background:#E5E7EB;border-radius:2px;margin-top:6px;}
+.progress-fill{height:100%;border-radius:2px;background:#FF5C00;}
+.progress-fill.red{background:#EF4444;}
+
+/* Footer */
+.page-footer{
+  background:#1A2A3A;color:rgba(255,255,255,0.5);
+  text-align:center;padding:14px;font-size:11px;
+  margin-top:40px;
+}
+.page-footer span{color:#FF5C00;font-weight:600;}
+
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#CBD5E1;border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav id="topnav">
+  <div class="brand">
+    <div class="brand-logo">Z</div>
+    <div>
+      <div class="brand-text">Zoho CRM Live Bridge</div>
+      <div class="brand-sub">CPL Sampling Intelligence Platform</div>
+    </div>
+  </div>
+
+  <div class="nav-links">
+    <div class="nav-link active" data-view="dashboard" onclick="showView('dashboard')">
+      <i data-lucide="layout-dashboard"></i> Dashboard
+    </div>
+    <div class="nav-link" data-view="kanban" onclick="showView('kanban')">
+      <i data-lucide="columns"></i> Kanban Board
+    </div>
+    <div class="nav-link" data-view="intake" onclick="showView('intake')">
+      <i data-lucide="file-plus"></i> Intake Form
+    </div>
+    <div class="nav-link" data-view="sapfeed" onclick="showView('sapfeed')">
+      <i data-lucide="activity"></i> SAP Feed
+      <span class="nav-badge">Live</span>
+    </div>
+  </div>
+
+  <div class="nav-right">
+    <div style="color:rgba(255,255,255,0.5);font-size:12px;">SAP S/4HANA Connected</div>
+    <div style="width:8px;height:8px;background:#10B981;border-radius:50%;"></div>
+    <div class="nav-avatar">MA</div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+
+  <!-- ==================== DASHBOARD ==================== -->
+  <div class="view active" id="view-dashboard">
+    <div class="page-header">
+      <div>
+        <div class="page-title">CRM Dashboard</div>
+        <div class="page-sub">Sampling pipeline overview — all active jobs synced with SAP S/4HANA</div>
+      </div>
+      <button class="orange-btn" onclick="showView('intake')">
+        <i data-lucide="plus" style="width:14px;height:14px;"></i> New Intake
+      </button>
+    </div>
+
+    <div class="content-area">
+
+      <div class="alert-banner">
+        <div class="alert-left">
+          <div class="alert-icon"><i data-lucide="alert-triangle" style="width:18px;height:18px;"></i></div>
+          <div>
+            <div class="alert-title">SLA BREACH — CRITICAL</div>
+            <div class="alert-desc">Pepsi Lays Salt — Packaging redesign: <strong>113 days in pipeline · 843 approval iterations</strong> · Root cause: Physical shade card mismatch</div>
+          </div>
+        </div>
+        <div class="alert-badge">113 DAYS OVERDUE</div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card" style="--accent:#FF5C00;">
+          <div class="stat-label">Active Jobs</div>
+          <div class="stat-value">47</div>
+          <div class="stat-trend">↑ 6 this week</div>
+        </div>
+        <div class="stat-card" style="--accent:#EF4444;">
+          <div class="stat-label">Avg Cycle Time</div>
+          <div class="stat-value">52<span style="font-size:16px;font-weight:500;">d</span></div>
+          <div class="stat-trend neg">Target: 25 days</div>
+        </div>
+        <div class="stat-card" style="--accent:#F59E0B;">
+          <div class="stat-label">Avg Iterations</div>
+          <div class="stat-value">35<span style="font-size:16px;font-weight:500;">×</span></div>
+          <div class="stat-trend warn">Target: 2×</div>
+        </div>
+        <div class="stat-card" style="--accent:#10B981;">
+          <div class="stat-label">SAP Synced Today</div>
+          <div class="stat-value">12</div>
+          <div class="stat-trend">Real-time bridge active</div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-title">Pipeline by Stage <span>— 47 active jobs</span></div>
+          <canvas id="chartPipeline" height="180"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">SLA Status <span>— % of jobs</span></div>
+          <canvas id="chartSLA" height="180"></canvas>
+        </div>
+      </div>
+
+      <div class="pipeline-table">
+        <div class="table-header">
+          <div class="table-title">Recent CRM Records</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span style="font-size:11px;color:#6B7280;">Showing 8 of 47</span>
+            <button class="orange-btn" style="padding:6px 12px;font-size:11px;" onclick="showView('kanban')">
+              <i data-lucide="columns" style="width:12px;height:12px;"></i> View Kanban
+            </button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>SAP Job ID</th><th>Client</th><th>Product / SKU</th>
+              <th>Stage</th><th>Days Open</th><th>Iterations</th><th>SLA Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="font-family:monospace;font-weight:600;color:#FF5C00;">SMP-2026-0018</td>
+              <td>PepsiCo Pakistan</td><td>Lays Salt Classic</td>
+              <td><span class="badge badge-purple">Client Review</span></td>
+              <td style="color:#DC2626;font-weight:700;">113</td>
+              <td style="color:#DC2626;font-weight:700;">843</td>
+              <td><span class="badge badge-red">CRITICAL</span></td>
+            </tr>
+            <tr>
+              <td style="font-family:monospace;font-weight:600;color:#FF5C00;">SMP-2026-0031</td>
+              <td>Unilever Pakistan</td><td>Surf Excel Matic</td>
+              <td><span class="badge badge-yellow">Proofing</span></td>
+              <td style="color:#D97706;font-weight:600;">38</td><td>14</td>
+              <td><span class="badge badge-yellow">AT RISK</span></td>
+            </tr>
+            <tr>
+              <td style="font-family:monospace;font-weight:600;color:#FF5C00;">SMP-2026-0039</td>
+              <td>Nestlé Pakistan</td><td>KitKat 4-Finger</td>
+              <td><span class="badge badge-blue">Pre-Press</span></td>
+              <td>12</td><td>4</td>
+              <td><span class="badge badge-green">ON TRACK</span></td>
+            </tr>
+            <tr>
+              <td style="font-family:monospace;font-weight:600;color:#FF5C00;">SMP-2026-0041</td>
+              <td>Coca-Cola Pakistan</td><td>Sprite Lemon 1.5L</td>
+              <td><span class="badge badge-orange">Design Brief</span></td>
+              <td>5</td><td>2</td>
+              <td><span class="badge badge-green">ON TRACK</span></td>
+            </tr>
+            <tr>
+              <td style="font-family:monospace;font-weight:600;color:#FF5C00;">SMP-2026-0035</td>
+              <td>P&amp;G Pakistan</td><td>Ariel Front Load</td>
+              <td><span class="badge badge-purple">Client Review</span></td>
+              <td style="color:#D97706;font-weight:600;">29</td><td>11</td>
+              <td><span class="badge badge-yellow">AT RISK</span></td>
+            </tr>
+            <tr>
+              <td style="font-family:monospace;font-weight:600;color:#FF5C00;">SMP-2026-0043</td>
+              <td>Engro Foods</td><td>Olper's Milk 1L</td>
+              <td><span class="badge badge-orange">Design Brief</span></td>
+              <td>3</td><td>1</td>
+              <td><span class="badge badge-green">ON TRACK</span></td>
+            </tr>
+            <tr>
+              <td style="font-family:monospace;font-weight:600;color:#FF5C00;">SMP-2026-0027</td>
+              <td>Reckitt Benckiser</td><td>Dettol Handwash 250ml</td>
+              <td><span class="badge badge-green">Approval Pending</span></td>
+              <td>18</td><td>7</td>
+              <td><span class="badge badge-green">ON TRACK</span></td>
+            </tr>
+            <tr>
+              <td style="font-family:monospace;font-weight:600;color:#FF5C00;">SMP-2026-0044</td>
+              <td>ICI Pakistan</td><td>Dulux WeatherShield</td>
+              <td><span class="badge badge-gray">Intake</span></td>
+              <td>1</td><td>0</td>
+              <td><span class="badge badge-green">ON TRACK</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+    <div class="page-footer">
+      CPL Sampling Intelligence Platform — Layer 2: Zoho CRM Live Bridge &nbsp;|&nbsp;
+      <span>LUMS MBA Group 5</span> — Maryum Fatima · M. Usama Ameer · M. Umar Wasim · Syeda Rafia Rizvi
+    </div>
+  </div>
+
+  <!-- ==================== KANBAN ==================== -->
+  <div class="view" id="view-kanban">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Kanban Board</div>
+        <div class="page-sub">7-stage sampling pipeline — click any card to expand details</div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="orange-btn" style="background:transparent;border:1px solid #FF5C00;color:#FF5C00;" onclick="showView('intake')">
+          <i data-lucide="plus" style="width:14px;height:14px;"></i> New Job
+        </button>
+        <button class="orange-btn"><i data-lucide="filter" style="width:14px;height:14px;"></i> Filter</button>
+      </div>
+    </div>
+
+    <div class="kanban-wrapper">
+      <div class="kanban-board">
+
+        <!-- 1. Intake -->
+        <div class="kanban-col">
+          <div class="col-header"><div class="col-title">1. Intake</div><div class="col-count">3</div></div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">ICI Pakistan</div>
+            <div class="card-product">Dulux WeatherShield Premium</div>
+            <div class="card-meta"><span class="card-days">1 day</span><span class="card-iter">0×</span></div>
+            <div class="card-id">SMP-2026-0044</div>
+            <div class="card-expanded">
+              <div class="card-exp-row"><span class="card-exp-label">Substrate</span><span class="card-exp-val">Duplex Board</span></div>
+              <div class="card-exp-row"><span class="card-exp-label">Colours</span><span class="card-exp-val">4C + Spot</span></div>
+            </div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Engro Foods</div>
+            <div class="card-product">Olper's Milk 1L Carton</div>
+            <div class="card-meta"><span class="card-days">3 days</span><span class="card-iter">1×</span></div>
+            <div class="card-id">SMP-2026-0043</div>
+            <div class="card-expanded">
+              <div class="card-exp-row"><span class="card-exp-label">Substrate</span><span class="card-exp-val">LDPE</span></div>
+              <div class="card-exp-row"><span class="card-exp-label">Colours</span><span class="card-exp-val">6C Process</span></div>
+            </div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Coca-Cola Pakistan</div>
+            <div class="card-product">Fanta Orange 500ml</div>
+            <div class="card-meta"><span class="card-days">2 days</span><span class="card-iter">0×</span></div>
+            <div class="card-id">SMP-2026-0045</div>
+          </div>
+        </div>
+
+        <!-- 2. Design Brief -->
+        <div class="kanban-col">
+          <div class="col-header"><div class="col-title">2. Design Brief</div><div class="col-count">4</div></div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Coca-Cola Pakistan</div>
+            <div class="card-product">Sprite Lemon 1.5L</div>
+            <div class="card-meta"><span class="card-days">5 days</span><span class="card-iter">2×</span></div>
+            <div class="card-id">SMP-2026-0041</div>
+            <div class="card-expanded">
+              <div class="card-exp-row"><span class="card-exp-label">Substrate</span><span class="card-exp-val">PET</span></div>
+              <div class="card-exp-row"><span class="card-exp-label">Finish</span><span class="card-exp-val">Matte + Gloss Spot</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:10%"></div></div>
+            </div>
+          </div>
+          <div class="kanban-card warn" onclick="this.classList.toggle('open')">
+            <div class="card-client">Unilever Pakistan</div>
+            <div class="card-product">Knorr Chicken Stock</div>
+            <div class="card-meta"><span class="card-days" style="color:#D97706;font-weight:600;">22 days</span><span class="card-iter" style="background:#FEF3C7;color:#D97706;">8×</span></div>
+            <div class="card-id">SMP-2026-0033</div>
+            <div class="card-expanded">
+              <div class="card-exp-row"><span class="card-exp-label">Substrate</span><span class="card-exp-val">Duplex Board</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:40%;background:#F59E0B"></div></div>
+            </div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Nestlé Pakistan</div>
+            <div class="card-product">Maggi Noodles 70g</div>
+            <div class="card-meta"><span class="card-days">6 days</span><span class="card-iter">3×</span></div>
+            <div class="card-id">SMP-2026-0040</div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Reckitt Benckiser</div>
+            <div class="card-product">Harpic Power Plus</div>
+            <div class="card-meta"><span class="card-days">8 days</span><span class="card-iter">4×</span></div>
+            <div class="card-id">SMP-2026-0042</div>
+          </div>
+        </div>
+
+        <!-- 3. Pre-Press -->
+        <div class="kanban-col">
+          <div class="col-header"><div class="col-title">3. Pre-Press</div><div class="col-count">5</div></div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Nestlé Pakistan</div>
+            <div class="card-product">KitKat 4-Finger</div>
+            <div class="card-meta"><span class="card-days">12 days</span><span class="card-iter">4×</span></div>
+            <div class="card-id">SMP-2026-0039</div>
+            <div class="card-expanded">
+              <div class="card-exp-row"><span class="card-exp-label">Substrate</span><span class="card-exp-val">BOPP</span></div>
+              <div class="card-exp-row"><span class="card-exp-label">Colours</span><span class="card-exp-val">5C + White</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:35%"></div></div>
+            </div>
+          </div>
+          <div class="kanban-card warn" onclick="this.classList.toggle('open')">
+            <div class="card-client">P&amp;G Pakistan</div>
+            <div class="card-product">Pantene Pro-V Shampoo</div>
+            <div class="card-meta"><span class="card-days" style="color:#D97706;font-weight:600;">19 days</span><span class="card-iter" style="background:#FEF3C7;color:#D97706;">9×</span></div>
+            <div class="card-id">SMP-2026-0036</div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Shan Foods</div>
+            <div class="card-product">Biryani Masala 50g</div>
+            <div class="card-meta"><span class="card-days">10 days</span><span class="card-iter">5×</span></div>
+            <div class="card-id">SMP-2026-0037</div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Olper's</div>
+            <div class="card-product">UHT Cream 200ml</div>
+            <div class="card-meta"><span class="card-days">14 days</span><span class="card-iter">6×</span></div>
+            <div class="card-id">SMP-2026-0038</div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Dawn Foods</div>
+            <div class="card-product">White Bread 400g</div>
+            <div class="card-meta"><span class="card-days">9 days</span><span class="card-iter">3×</span></div>
+            <div class="card-id">SMP-2026-0046</div>
+          </div>
+        </div>
+
+        <!-- 4. Proofing -->
+        <div class="kanban-col">
+          <div class="col-header"><div class="col-title">4. Proofing</div><div class="col-count orange">6</div></div>
+          <div class="kanban-card warn" onclick="this.classList.toggle('open')">
+            <div class="card-client">Unilever Pakistan</div>
+            <div class="card-product">Surf Excel Matic 2kg</div>
+            <div class="card-meta"><span class="card-days red">38 days</span><span class="card-iter red">14×</span></div>
+            <div class="card-id">SMP-2026-0031</div>
+            <div class="card-expanded">
+              <div class="card-exp-row"><span class="card-exp-label">Substrate</span><span class="card-exp-val">Duplex Board</span></div>
+              <div class="card-exp-row"><span class="card-exp-label">Issue</span><span class="card-exp-val" style="color:#D97706;">Colour deviation ΔE 4.2</span></div>
+              <div class="progress-bar"><div class="progress-fill red" style="width:70%"></div></div>
+            </div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Friesland Campina</div>
+            <div class="card-product">Everyday Tea Whitener</div>
+            <div class="card-meta"><span class="card-days">16 days</span><span class="card-iter">7×</span></div>
+            <div class="card-id">SMP-2026-0032</div>
+          </div>
+          <div class="kanban-card warn" onclick="this.classList.toggle('open')">
+            <div class="card-client">Mitchell's Fruit Farms</div>
+            <div class="card-product">Strawberry Jam 450g</div>
+            <div class="card-meta"><span class="card-days" style="color:#D97706;font-weight:600;">24 days</span><span class="card-iter" style="background:#FEF3C7;color:#D97706;">10×</span></div>
+            <div class="card-id">SMP-2026-0028</div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Tapal Tea</div>
+            <div class="card-product">Danedar Blend 900g</div>
+            <div class="card-meta"><span class="card-days">11 days</span><span class="card-iter">5×</span></div>
+            <div class="card-id">SMP-2026-0029</div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Gourmet Foods</div>
+            <div class="card-product">Chicken Broast Pack</div>
+            <div class="card-meta"><span class="card-days">15 days</span><span class="card-iter">6×</span></div>
+            <div class="card-id">SMP-2026-0047</div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">English Biscuits</div>
+            <div class="card-product">Peek Freans Rio</div>
+            <div class="card-meta"><span class="card-days">13 days</span><span class="card-iter">4×</span></div>
+            <div class="card-id">SMP-2026-0030</div>
+          </div>
+        </div>
+
+        <!-- 5. Client Review — PEPSI ALERT -->
+        <div class="kanban-col">
+          <div class="col-header"><div class="col-title">5. Client Review</div><div class="col-count orange">7</div></div>
+
+          <!-- PEPSI CRITICAL CARD -->
+          <div class="kanban-card alert" onclick="this.classList.toggle('open')" style="background:linear-gradient(135deg,#FEF2F2,#fff);">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+              <div style="width:7px;height:7px;background:#EF4444;border-radius:50%;animation:pulse-dot 1s infinite;"></div>
+              <span style="font-size:9px;font-weight:700;color:#DC2626;text-transform:uppercase;letter-spacing:0.5px;">CRITICAL · SLA BREACH</span>
+            </div>
+            <div class="card-client" style="color:#DC2626;">PepsiCo Pakistan</div>
+            <div class="card-product">Lays Salt Classic — Pouch Redesign</div>
+            <div class="card-meta" style="margin-top:8px;">
+              <span class="card-days red">113 days</span>
+              <span class="card-iter red">843×</span>
+            </div>
+            <div class="card-id" style="color:#DC2626;">SMP-2026-0018</div>
+            <div class="card-expanded">
+              <div class="card-exp-row"><span class="card-exp-label">Substrate</span><span class="card-exp-val">Metalised PET</span></div>
+              <div class="card-exp-row"><span class="card-exp-label">Colours</span><span class="card-exp-val">8C + White + Varnish</span></div>
+              <div class="card-exp-row"><span class="card-exp-label">Root cause</span><span class="card-exp-val" style="color:#DC2626;">Physical shade card mismatch</span></div>
+              <div class="card-exp-row"><span class="card-exp-label">Cost to date</span><span class="card-exp-val" style="color:#DC2626;">Rs. 4.2M</span></div>
+              <div style="margin-top:6px;font-size:9px;color:#059669;font-weight:600;background:#F0FDF4;padding:5px 7px;border-radius:5px;">
+                SIP fix: GMG ColorProof ΔE measurement → resolves in 2 iterations
+              </div>
+            </div>
+          </div>
+
+          <div class="kanban-card warn" onclick="this.classList.toggle('open')">
+            <div class="card-client">P&amp;G Pakistan</div>
+            <div class="card-product">Ariel Front Load 2kg</div>
+            <div class="card-meta"><span class="card-days red">29 days</span><span class="card-iter" style="background:#FEF3C7;color:#D97706;">11×</span></div>
+            <div class="card-id">SMP-2026-0035</div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Reckitt Benckiser</div>
+            <div class="card-product">Dettol Original 500ml</div>
+            <div class="card-meta"><span class="card-days">17 days</span><span class="card-iter">8×</span></div>
+            <div class="card-id">SMP-2026-0026</div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Lucky Cement</div>
+            <div class="card-product">50kg Bag Redesign</div>
+            <div class="card-meta"><span class="card-days">20 days</span><span class="card-iter">9×</span></div>
+            <div class="card-id">SMP-2026-0023</div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Bisconni</div>
+            <div class="card-product">Cocomo Family Pack</div>
+            <div class="card-meta"><span class="card-days">15 days</span><span class="card-iter">6×</span></div>
+            <div class="card-id">SMP-2026-0024</div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Rafhan Maize</div>
+            <div class="card-product">Corn Flour 800g</div>
+            <div class="card-meta"><span class="card-days">13 days</span><span class="card-iter">5×</span></div>
+            <div class="card-id">SMP-2026-0025</div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Haleeb Foods</div>
+            <div class="card-product">Lassi Mango 250ml</div>
+            <div class="card-meta"><span class="card-days">9 days</span><span class="card-iter">3×</span></div>
+            <div class="card-id">SMP-2026-0048</div>
+          </div>
+        </div>
+
+        <!-- 6. Approval Pending -->
+        <div class="kanban-col">
+          <div class="col-header"><div class="col-title">6. Approval Pending</div><div class="col-count">5</div></div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Reckitt Benckiser</div>
+            <div class="card-product">Dettol Handwash 250ml</div>
+            <div class="card-meta"><span class="card-days">18 days</span><span class="card-iter">7×</span></div>
+            <div class="card-id">SMP-2026-0027</div>
+            <div class="card-expanded">
+              <div class="card-exp-row"><span class="card-exp-label">ΔE Score</span><span class="card-exp-val" style="color:#059669;">1.8 — PASS</span></div>
+              <div class="card-exp-row"><span class="card-exp-label">Awaiting</span><span class="card-exp-val">Brand manager sign-off</span></div>
+            </div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Nestlé Pakistan</div>
+            <div class="card-product">Milo 400g Tin</div>
+            <div class="card-meta"><span class="card-days">21 days</span><span class="card-iter">9×</span></div>
+            <div class="card-id">SMP-2026-0021</div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Unilever Pakistan</div>
+            <div class="card-product">Lipton Yellow Label 200g</div>
+            <div class="card-meta"><span class="card-days">19 days</span><span class="card-iter">8×</span></div>
+            <div class="card-id">SMP-2026-0022</div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Colgate-Palmolive</div>
+            <div class="card-product">Colgate Max Fresh</div>
+            <div class="card-meta"><span class="card-days">16 days</span><span class="card-iter">6×</span></div>
+            <div class="card-id">SMP-2026-0019</div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')">
+            <div class="card-client">Jubilee Life</div>
+            <div class="card-product">Brochure Series 2026</div>
+            <div class="card-meta"><span class="card-days">14 days</span><span class="card-iter">5×</span></div>
+            <div class="card-id">SMP-2026-0020</div>
+          </div>
+        </div>
+
+        <!-- 7. Approved -->
+        <div class="kanban-col">
+          <div class="col-header"><div class="col-title">7. Approved</div><div class="col-count" style="background:#059669;">6</div></div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')" style="opacity:0.85;">
+            <div class="card-client">Unilever Pakistan</div>
+            <div class="card-product">Comfort Rose 2L</div>
+            <div class="card-meta"><span class="card-days" style="color:#059669;">23d total</span><span class="card-iter" style="background:#D1FAE5;color:#059669;">8×</span></div>
+            <div class="card-id">SMP-2026-0014</div>
+            <div class="card-expanded">
+              <div class="card-exp-row"><span class="card-exp-label">ΔE final</span><span class="card-exp-val" style="color:#059669;">1.4 — PASS</span></div>
+              <div class="card-exp-row"><span class="card-exp-label">Approved by</span><span class="card-exp-val">Ahmed R.</span></div>
+            </div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')" style="opacity:0.85;">
+            <div class="card-client">Nestlé Pakistan</div>
+            <div class="card-product">Nesquik 250ml</div>
+            <div class="card-meta"><span class="card-days" style="color:#059669;">18d total</span><span class="card-iter" style="background:#D1FAE5;color:#059669;">6×</span></div>
+            <div class="card-id">SMP-2026-0015</div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')" style="opacity:0.85;">
+            <div class="card-client">Coca-Cola Pakistan</div>
+            <div class="card-product">Minute Maid Pulpy</div>
+            <div class="card-meta"><span class="card-days" style="color:#059669;">20d total</span><span class="card-iter" style="background:#D1FAE5;color:#059669;">7×</span></div>
+            <div class="card-id">SMP-2026-0016</div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')" style="opacity:0.85;">
+            <div class="card-client">P&amp;G Pakistan</div>
+            <div class="card-product">Head &amp; Shoulders 400ml</div>
+            <div class="card-meta"><span class="card-days" style="color:#059669;">25d total</span><span class="card-iter" style="background:#D1FAE5;color:#059669;">9×</span></div>
+            <div class="card-id">SMP-2026-0011</div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')" style="opacity:0.85;">
+            <div class="card-client">Engro Foods</div>
+            <div class="card-product">Tarang Chai 500ml</div>
+            <div class="card-meta"><span class="card-days" style="color:#059669;">17d total</span><span class="card-iter" style="background:#D1FAE5;color:#059669;">4×</span></div>
+            <div class="card-id">SMP-2026-0012</div>
+          </div>
+          <div class="kanban-card ok" onclick="this.classList.toggle('open')" style="opacity:0.85;">
+            <div class="card-client">Reckitt Benckiser</div>
+            <div class="card-product">Veet Sensitive 50ml</div>
+            <div class="card-meta"><span class="card-days" style="color:#059669;">15d total</span><span class="card-iter" style="background:#D1FAE5;color:#059669;">5×</span></div>
+            <div class="card-id">SMP-2026-0017</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="page-footer">
+      CPL Sampling Intelligence Platform — Layer 2: Zoho CRM Live Bridge &nbsp;|&nbsp;
+      <span>LUMS MBA Group 5</span> — Maryum Fatima · M. Usama Ameer · M. Umar Wasim · Syeda Rafia Rizvi
+    </div>
+  </div>
+
+  <!-- ==================== INTAKE FORM ==================== -->
+  <div class="view" id="view-intake">
+    <div class="page-header">
+      <div>
+        <div class="page-title">New Sampling Intake</div>
+        <div class="page-sub">Submit a new job — auto-syncs to SAP S/4HANA and generates a Job ID</div>
+      </div>
+    </div>
+    <div class="intake-wrapper">
+      <div class="form-card">
+        <div class="form-header">
+          <div class="form-icon"><i data-lucide="file-plus" style="width:22px;height:22px;"></i></div>
+          <div>
+            <div class="form-title">Sampling Job Intake Form</div>
+            <div class="form-subtitle">Zoho CRM → SAP S/4HANA Live Bridge · Job ID generated on submission</div>
+          </div>
+        </div>
+        <div class="form-body">
+
+          <div style="font-size:11px;font-weight:700;color:#FF5C00;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:16px;">Client Information</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Client Name <span class="required">*</span></label>
+              <select class="form-control" id="f-client">
+                <option value="">— Select Client —</option>
+                <option>PepsiCo Pakistan</option>
+                <option>Unilever Pakistan</option>
+                <option>Nestlé Pakistan</option>
+                <option>Coca-Cola Pakistan</option>
+                <option>P&amp;G Pakistan</option>
+                <option>Reckitt Benckiser</option>
+                <option>Engro Foods</option>
+                <option>ICI Pakistan</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Client Brand Manager</label>
+              <input class="form-control" type="text" placeholder="e.g. Sana Ahmed" id="f-manager"/>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Product Name / SKU <span class="required">*</span></label>
+              <input class="form-control" type="text" placeholder="e.g. Lays Classic Salted 50g" id="f-product"/>
+            </div>
+            <div class="form-group">
+              <label>Job Priority</label>
+              <select class="form-control" id="f-priority">
+                <option>Standard</option>
+                <option>Urgent</option>
+                <option>Critical</option>
+              </select>
+            </div>
+          </div>
+
+          <hr class="form-divider"/>
+          <div style="font-size:11px;font-weight:700;color:#FF5C00;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:16px;">Technical Specifications</div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Substrate Material <span class="required">*</span></label>
+              <select class="form-control" id="f-substrate">
+                <option value="">— Select Substrate —</option>
+                <option>BOPP (Biaxially Oriented Polypropylene)</option>
+                <option>PET (Polyethylene Terephthalate)</option>
+                <option>Metalised PET</option>
+                <option>LDPE (Low Density Polyethylene)</option>
+                <option>Duplex Board</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Printing Colours</label>
+              <select class="form-control" id="f-colours">
+                <option>4 Colour Process (CMYK)</option>
+                <option>4C + Spot Colour</option>
+                <option>5C + White</option>
+                <option>6C Process</option>
+                <option>8C + White + Varnish</option>
+                <option>Custom</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Finishing Type</label>
+              <select class="form-control" id="f-finish">
+                <option>Gloss Lamination</option>
+                <option>Matte Lamination</option>
+                <option>Matte + Gloss Spot</option>
+                <option>Soft Touch</option>
+                <option>No Lamination</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Quantity (units)</label>
+              <input class="form-control" type="number" placeholder="e.g. 5000" id="f-qty"/>
+            </div>
+          </div>
+
+          <div class="form-row full">
+            <div class="form-group">
+              <label>Special Requirements / Notes</label>
+              <textarea class="form-control" rows="3" placeholder="Describe colour matching requirements, regulatory text, barcode specs, etc." id="f-desc" style="resize:vertical;"></textarea>
+            </div>
+          </div>
+
+          <hr class="form-divider"/>
+          <div style="font-size:11px;font-weight:700;color:#FF5C00;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:16px;">Timeline</div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Required By Date</label>
+              <input class="form-control" type="date" id="f-date"/>
+            </div>
+            <div class="form-group">
+              <label>SLA Category</label>
+              <select class="form-control" id="f-sla">
+                <option>Standard (25 business days)</option>
+                <option>Express (15 business days)</option>
+                <option>Rush (7 business days)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:8px;">
+            <button onclick="clearForm()" style="background:transparent;border:1px solid #D1D5DB;color:#374151;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">
+              Clear
+            </button>
+            <button class="submit-btn" onclick="submitIntake()">
+              <i data-lucide="send" style="width:16px;height:16px;"></i>
+              Submit &amp; Sync to SAP
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <div class="page-footer">
+      CPL Sampling Intelligence Platform — Layer 2: Zoho CRM Live Bridge &nbsp;|&nbsp;
+      <span>LUMS MBA Group 5</span> — Maryum Fatima · M. Usama Ameer · M. Umar Wasim · Syeda Rafia Rizvi
+    </div>
+  </div>
+
+  <!-- ==================== SAP FEED ==================== -->
+  <div class="view" id="view-sapfeed">
+    <div class="page-header">
+      <div>
+        <div class="page-title">SAP Live Feed</div>
+        <div class="page-sub">Real-time event stream — Zoho CRM ↔ SAP S/4HANA REST API bridge</div>
+      </div>
+      <div class="live-pill">
+        <div class="live-dot"></div> LIVE
+      </div>
+    </div>
+
+    <div class="feed-wrapper">
+      <div class="feed-grid">
+
+        <div class="feed-stream">
+          <div class="stream-header">
+            <div class="stream-title">SAP S/4HANA Event Stream</div>
+            <span style="font-size:11px;color:#6B7280;">47 events today · auto-refreshing</span>
+          </div>
+          <div class="stream-body">
+            <div class="feed-event">
+              <div class="event-dot red"></div>
+              <div class="event-content">
+                <div class="event-title">SLA BREACH ESCALATION — SMP-2026-0018 <span class="event-tag">CRITICAL</span></div>
+                <div class="event-meta">PepsiCo · Lays Salt Classic · Day 113 · 843 iterations · Escalated to CPL Management</div>
+                <div class="event-time">Today, 09:14 AM · Event: SLA_BREACH_ESCALATE · SAP posting #843</div>
+              </div>
+            </div>
+            <div class="feed-event">
+              <div class="event-dot orange"></div>
+              <div class="event-content">
+                <div class="event-title">New SAP Job Created — SMP-2026-0045</div>
+                <div class="event-meta">Coca-Cola Pakistan · Fanta Orange 500ml · Stage: Intake</div>
+                <div class="event-time">Today, 08:52 AM · REST API POST /api/v1/jobs · 201 Created · Latency: 312ms</div>
+              </div>
+            </div>
+            <div class="feed-event">
+              <div class="event-dot green"></div>
+              <div class="event-content">
+                <div class="event-title">Approval Received — SMP-2026-0027</div>
+                <div class="event-meta">Reckitt Benckiser · Dettol Handwash 250ml · GMG ΔE 1.8 — PASS</div>
+                <div class="event-time">Today, 08:31 AM · SAP posting #66 · Approved by: Ahmed R. (Brand Mgr)</div>
+              </div>
+            </div>
+            <div class="feed-event">
+              <div class="event-dot blue"></div>
+              <div class="event-content">
+                <div class="event-title">Stage Transition — SMP-2026-0039</div>
+                <div class="event-meta">Nestlé Pakistan · KitKat 4-Finger · Design Brief → Pre-Press</div>
+                <div class="event-time">Today, 08:15 AM · CRM field update synced · SAP status updated</div>
+              </div>
+            </div>
+            <div class="feed-event">
+              <div class="event-dot orange"></div>
+              <div class="event-content">
+                <div class="event-title">New SAP Job Created — SMP-2026-0044</div>
+                <div class="event-meta">ICI Pakistan · Dulux WeatherShield Premium · Stage: Intake</div>
+                <div class="event-time">Today, 08:03 AM · REST API POST /api/v1/jobs · 201 Created · Latency: 340ms</div>
+              </div>
+            </div>
+            <div class="feed-event">
+              <div class="event-dot purple"></div>
+              <div class="event-content">
+                <div class="event-title">Iteration #14 Logged — SMP-2026-0031</div>
+                <div class="event-meta">Unilever · Surf Excel Matic · Proofing stage · ΔE 4.2 (fail) · Physical shade card mismatch</div>
+                <div class="event-time">Yesterday, 04:45 PM · Cost recorded in SAP FI module</div>
+              </div>
+            </div>
+            <div class="feed-event">
+              <div class="event-dot green"></div>
+              <div class="event-content">
+                <div class="event-title">GMG Proof Approved — SMP-2026-0021</div>
+                <div class="event-meta">Nestlé Pakistan · Milo 400g Tin · ΔE 1.6 — PASS · Moving to Approval Pending</div>
+                <div class="event-time">Yesterday, 03:22 PM · Colour measurement confirmed on-press</div>
+              </div>
+            </div>
+            <div class="feed-event">
+              <div class="event-dot blue"></div>
+              <div class="event-content">
+                <div class="event-title">Cost Record Updated — SMP-2026-0018</div>
+                <div class="event-meta">PepsiCo · Lays Salt · Cumulative cost Rs. 4.2M · 843 shade card iterations</div>
+                <div class="event-time">Yesterday, 02:58 PM · SAP FI posting #843 · Escalation flag set</div>
+              </div>
+            </div>
+            <div class="feed-event">
+              <div class="event-dot orange"></div>
+              <div class="event-content">
+                <div class="event-title">New SAP Job Created — SMP-2026-0043</div>
+                <div class="event-meta">Engro Foods · Olper's Milk 1L Carton · Stage: Intake</div>
+                <div class="event-time">Yesterday, 01:30 PM · Latency: 298ms</div>
+              </div>
+            </div>
+            <div class="feed-event">
+              <div class="event-dot green"></div>
+              <div class="event-content">
+                <div class="event-title">Job Closed — SMP-2026-0014</div>
+                <div class="event-meta">Unilever · Comfort Rose 2L · 23 days · 8 iterations · APPROVED</div>
+                <div class="event-time">Yesterday, 11:15 AM · SAP status: CLOSED_APPROVED · Archive triggered</div>
+              </div>
+            </div>
+            <div class="feed-event">
+              <div class="event-dot purple"></div>
+              <div class="event-content">
+                <div class="event-title">Iteration #11 Logged — SMP-2026-0035</div>
+                <div class="event-meta">P&amp;G Pakistan · Ariel Front Load · Client Review · Physical shade card mismatch</div>
+                <div class="event-time">Yesterday, 10:02 AM · SLA warning triggered: 29 days open</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="feed-side">
+          <div class="side-card">
+            <div class="side-title">REST API Bridge Status</div>
+            <div class="sync-status-row">
+              <span class="sync-status-label">Connection</span>
+              <span class="sync-status-val green">● Connected</span>
+            </div>
+            <div class="sync-status-row">
+              <span class="sync-status-label">SAP Endpoint</span>
+              <span class="sync-status-val" style="font-size:11px;font-family:monospace;">sap.cpl.com.pk/api/v1</span>
+            </div>
+            <div class="sync-status-row">
+              <span class="sync-status-label">Avg Latency</span>
+              <span class="sync-status-val green">317 ms</span>
+            </div>
+            <div class="sync-status-row">
+              <span class="sync-status-label">Jobs Synced Today</span>
+              <span class="sync-status-val orange">12</span>
+            </div>
+            <div class="sync-status-row">
+              <span class="sync-status-label">Events This Month</span>
+              <span class="sync-status-val">843</span>
+            </div>
+            <div class="sync-status-row">
+              <span class="sync-status-label">Last Heartbeat</span>
+              <span class="sync-status-val green">2s ago</span>
+            </div>
+          </div>
+
+          <div class="side-card">
+            <div class="side-title">Today's Activity</div>
+            <canvas id="chartFeedDonut" height="150"></canvas>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:12px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:6px;"><div style="width:8px;height:8px;background:#FF5C00;border-radius:2px;"></div><span style="font-size:11px;">New Jobs</span></div>
+                <span style="font-size:11px;font-weight:700;">3</span>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:6px;"><div style="width:8px;height:8px;background:#10B981;border-radius:2px;"></div><span style="font-size:11px;">Approvals</span></div>
+                <span style="font-size:11px;font-weight:700;">2</span>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:6px;"><div style="width:8px;height:8px;background:#3B82F6;border-radius:2px;"></div><span style="font-size:11px;">Stage Moves</span></div>
+                <span style="font-size:11px;font-weight:700;">5</span>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:6px;"><div style="width:8px;height:8px;background:#EF4444;border-radius:2px;"></div><span style="font-size:11px;">SLA Alerts</span></div>
+                <span style="font-size:11px;font-weight:700;">2</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="side-card">
+            <div class="side-title">Quick Actions</div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <button class="orange-btn" style="width:100%;justify-content:center;" onclick="showView('intake')">
+                <i data-lucide="plus" style="width:14px;height:14px;"></i> New Intake
+              </button>
+              <button class="orange-btn" style="width:100%;justify-content:center;background:transparent;border:1px solid #E5E7EB;color:#374151;">
+                <i data-lucide="download" style="width:14px;height:14px;"></i> Export to Excel
+              </button>
+              <button class="orange-btn" style="width:100%;justify-content:center;background:transparent;border:1px solid #E5E7EB;color:#374151;" onclick="showView('kanban')">
+                <i data-lucide="columns" style="width:14px;height:14px;"></i> View Kanban
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="page-footer">
+      CPL Sampling Intelligence Platform — Layer 2: Zoho CRM Live Bridge &nbsp;|&nbsp;
+      <span>LUMS MBA Group 5</span> — Maryum Fatima · M. Usama Ameer · M. Umar Wasim · Syeda Rafia Rizvi
+    </div>
+  </div>
+
+</div><!-- #main -->
+
+<!-- SAP SYNC MODAL -->
+<div class="modal-overlay" id="syncModal">
+  <div class="sync-modal">
+    <div class="sync-logo">SAP</div>
+    <div class="sync-title" id="syncTitle">Syncing to SAP S/4HANA</div>
+    <div class="sync-sub" id="syncSub">Please wait while we create your job record…</div>
+
+    <div class="sync-steps" id="syncSteps">
+      <div class="sync-step" id="step0">
+        <div class="step-icon"><i data-lucide="wifi"></i></div>
+        <div class="step-text">
+          <div class="step-label">Connecting to SAP S/4HANA</div>
+          <div class="step-desc">Authenticating REST API session</div>
+        </div>
+        <div class="spinner" id="spinner0" style="display:none;"></div>
+      </div>
+      <div class="sync-step" id="step1">
+        <div class="step-icon"><i data-lucide="send"></i></div>
+        <div class="step-text">
+          <div class="step-label">Sending Intake Data</div>
+          <div class="step-desc">POST /api/v1/jobs — writing to SAP</div>
+        </div>
+        <div class="spinner" id="spinner1" style="display:none;"></div>
+      </div>
+      <div class="sync-step" id="step2">
+        <div class="step-icon"><i data-lucide="tag"></i></div>
+        <div class="step-text">
+          <div class="step-label">Generating SAP Job ID</div>
+          <div class="step-desc">Activating cost tracking &amp; SLA timer</div>
+        </div>
+        <div class="spinner" id="spinner2" style="display:none;"></div>
+      </div>
+      <div class="sync-step" id="step3">
+        <div class="step-icon"><i data-lucide="bell"></i></div>
+        <div class="step-text">
+          <div class="step-label">Notifying Production Team</div>
+          <div class="step-desc">Email sent to scheduling team</div>
+        </div>
+        <div class="spinner" id="spinner3" style="display:none;"></div>
+      </div>
+      <div class="sync-step" id="step4">
+        <div class="step-icon"><i data-lucide="database"></i></div>
+        <div class="step-text">
+          <div class="step-label">Updating Zoho CRM Record</div>
+          <div class="step-desc">SAP Job ID written back to CRM</div>
+        </div>
+        <div class="spinner" id="spinner4" style="display:none;"></div>
+      </div>
+    </div>
+
+    <div class="success-box" id="successBox">
+      <div class="success-label">SAP Job ID Generated</div>
+      <div class="success-id" id="successId">SMP-2026-0049</div>
+      <div style="font-size:12px;color:#374151;margin-bottom:16px;">Job is live in SAP S/4HANA and visible on the Kanban Board.</div>
+      <button class="submit-btn" style="width:100%;justify-content:center;" onclick="closeModal()">
+        <i data-lucide="check" style="width:16px;height:16px;"></i> Done — View on Kanban
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentView = 'dashboard';
+let chartsInit = {};
+let jobCounter = 49;
+
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  const nl = document.querySelector('[data-view="' + name + '"]');
+  if (nl) nl.classList.add('active');
+  currentView = name;
+  if (!chartsInit[name]) {
+    chartsInit[name] = true;
+    setTimeout(() => initCharts(name), 60);
+  }
+  lucide.createIcons();
+}
+
+function initCharts(view) {
+  if (view === 'dashboard') {
+    const ctx1 = document.getElementById('chartPipeline');
+    if (ctx1 && !ctx1._ci) {
+      ctx1._ci = new Chart(ctx1, {
+        type: 'bar',
+        data: {
+          labels: ['Intake', 'Design Brief', 'Pre-Press', 'Proofing', 'Client Review', 'Appr. Pending', 'Approved'],
+          datasets: [{
+            data: [3, 4, 5, 6, 7, 5, 6],
+            backgroundColor: ['#93C5FD','#FCD34D','#6EE7B7','#FB923C','#EF4444','#A78BFA','#34D399'],
+            borderRadius: 5,
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+            y: { beginAtZero: true, grid: { color: '#F3F4F6' }, ticks: { font: { size: 10 } } }
+          }
+        }
+      });
+    }
+    const ctx2 = document.getElementById('chartSLA');
+    if (ctx2 && !ctx2._ci) {
+      ctx2._ci = new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+          labels: ['On Track', 'At Risk', 'Critical'],
+          datasets: [{ data: [62, 26, 12], backgroundColor: ['#10B981','#F59E0B','#EF4444'], borderWidth: 0 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10 } } },
+          cutout: '65%'
+        }
+      });
+    }
+  }
+  if (view === 'sapfeed') {
+    const ctx3 = document.getElementById('chartFeedDonut');
+    if (ctx3 && !ctx3._ci) {
+      ctx3._ci = new Chart(ctx3, {
+        type: 'doughnut',
+        data: {
+          labels: ['New Jobs', 'Approvals', 'Stage Moves', 'SLA Alerts'],
+          datasets: [{ data: [3, 2, 5, 2], backgroundColor: ['#FF5C00','#10B981','#3B82F6','#EF4444'], borderWidth: 0 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          cutout: '60%'
+        }
+      });
+    }
+  }
+}
+
+function clearForm() {
+  ['f-client','f-manager','f-product','f-priority','f-substrate','f-colours','f-finish','f-qty','f-desc','f-date','f-sla'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = el.tagName === 'SELECT' ? el.options[0].value : '';
+  });
+}
+
+function submitIntake() {
+  const client = document.getElementById('f-client').value;
+  const product = document.getElementById('f-product').value;
+  if (!client || !product) {
+    alert('Please fill in the required fields: Client Name and Product Name.');
+    return;
+  }
+  const modal = document.getElementById('syncModal');
+  modal.classList.add('show');
+  document.getElementById('syncSteps').style.display = 'flex';
+  document.getElementById('successBox').style.display = 'none';
+  document.getElementById('syncTitle').textContent = 'Syncing to SAP S/4HANA';
+  document.getElementById('syncSub').textContent = 'Creating job record for ' + client + '…';
+
+  for (let i = 0; i <= 4; i++) {
+    document.getElementById('step' + i).classList.remove('active', 'done');
+    document.getElementById('spinner' + i).style.display = 'none';
+  }
+  lucide.createIcons();
+
+  let i = 0;
+  const interval = setInterval(() => {
+    if (i > 0) {
+      const prev = document.getElementById('step' + (i - 1));
+      prev.classList.remove('active');
+      prev.classList.add('done');
+      document.getElementById('spinner' + (i - 1)).style.display = 'none';
+      lucide.createIcons();
+    }
+    if (i < 5) {
+      document.getElementById('step' + i).classList.add('active');
+      document.getElementById('spinner' + i).style.display = 'block';
+      i++;
+    } else {
+      clearInterval(interval);
+      document.getElementById('syncSteps').style.display = 'none';
+      const newId = 'SMP-2026-' + String(jobCounter).padStart(4, '0');
+      jobCounter++;
+      document.getElementById('successId').textContent = newId;
+      document.getElementById('successBox').style.display = 'block';
+      document.getElementById('syncTitle').textContent = 'Job Created Successfully!';
+      document.getElementById('syncSub').textContent = 'SAP Job ID assigned and CRM record is live.';
+      lucide.createIcons();
+    }
+  }, 750);
+}
+
+function closeModal() {
+  document.getElementById('syncModal').classList.remove('show');
+  showView('kanban');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  lucide.createIcons();
+  chartsInit['dashboard'] = true;
+  setTimeout(() => initCharts('dashboard'), 60);
+});
+</script>
+</body>
+</html>
